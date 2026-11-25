@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       - name: Prepare static frontend
+        working-directory: github-repo
         run: |
           mkdir -p _site/vendor _site/screenshots
           cp index.html app.js density-3d.js style.css runtime.js _site/
@@ -33,6 +34,6 @@ jobs:
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: github-repo/_site
       - id: deployment
         uses: actions/deploy-pages@v4
