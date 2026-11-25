@@ -4,7 +4,7 @@
 
 ## 三维重力场正演工作台
 
-[在线三维演示](https://hjt213.github.io/gravity-forward-modeling/) ｜ [Python 后端源码](https://github.com/HJT213/gravity-forward-modeling/tree/main/github-repo/backend)
+[在线三维演示](https://hjt213.github.io/gravity-forward-modeling/) ｜ [Windows 版下载](https://github.com/HJT213/gravity-forward-modeling/releases/tag/v1.0.0) ｜ [Python 后端源码](https://github.com/HJT213/gravity-forward-modeling/tree/main/github-repo/backend)
 
 ## 项目简介
 
@@ -40,7 +40,9 @@ GitHub Pages 提供预先计算的结果，由浏览器绘制三维视图和图�
 
 ## Windows EXE
 
-在 64 位 Windows 上解压完整程序包，双击「三维重力场正演工作台.exe」。启动器会打开默认浏览器，请在使用期间保持启动器运行。程序包内含四类样本、模型权重和 Python CPU 推理环境，可离线运行。
+打开 [Windows 版发布页](https://github.com/HJT213/gravity-forward-modeling/releases/tag/v1.0.0)，在 **Assets** 下下载 **`default.zip`**。不要下载 **Source code (zip)** 或 **Source code (tar.gz)**，它们是 GitHub 自动生成的源码包，不包含 EXE。
+
+在 64 位 Windows 上解压 `default.zip`，双击「三维重力场正演工作台.exe」。启动器会打开默认浏览器，请在使用期间保持启动器运行。程序包内含四类样本、模型权重和 Python CPU 推理环境，可离线运行。
 
 在「自定义建模」中可添加 1–16 个棱柱，输入中心位置、埋深、尺寸和密度差。点击「生成密度模型」查看三维模型与解析参考值，选择合适的 FNO 权重后点击「运行正演」，即可在本机计算预测值并查看误差。[Windows 自定义建模截图](https://hjt213.github.io/gravity-forward-modeling/screenshots/windows-custom.png)
 
