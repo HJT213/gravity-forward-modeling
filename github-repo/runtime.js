@@ -1,0 +1,1 @@
+window.GRAVITY_LOCAL_INFERENCE = false;

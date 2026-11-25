@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>三维重力场正演工作台 · Gravity Lab</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="runtime.js" defer></script>
+  <script src="vendor/three.min.js" defer></script>
+  <script src="density-3d.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="shell top-inner">
+      <div class="brand">Gravity Lab</div>
+      <span id="connection-mode" class="local">样本演示</span>
+    </div>
+  </header>
+  <main class="shell">
+    <header class="page-heading">
+      <div>
+        <h1>三维重力场正演工作台</h1>
+      </div>
+      <div class="grid-pair" aria-label="从 32 立方训练网格推理至 64 立方">
+        <div><small>训练网格</small><strong>32³</strong></div>
+        <span aria-hidden="true">→</span>
+        <div><small>推理网格</small><strong>64³</strong></div>
+      </div>
+    </header>
+    <section class="workspace" aria-label="重力正演">
+      <aside class="controls" aria-label="输入样本">
+        <div class="section-head"><h2>密度模型</h2></div>
+        <div id="sample-buttons" class="sample-buttons" role="group" aria-label="内置仿真样本"></div>
+        <button id="custom-tab" class="custom-tab" type="button" aria-pressed="false" aria-controls="custom-form" hidden disabled>自定义建模</button>
+        <form id="custom-form" hidden>
+          <fieldset id="custom-fields">
+            <p class="form-note">X、Y 为 0–20 km，埋深为 0–7 km。棱柱重叠处的密度差相加。</p>
+            <div id="prism-list"></div>
+            <button id="add-prism" class="form-button" type="button">＋ 添加棱柱</button>
+            <label class="model-label" for="custom-model">FNO 权重</label>
+            <select id="custom-model"></select>
+            <button id="generate" class="form-button generate" type="submit">生成密度模型</button>
+          </fieldset>
+          <p id="custom-notice" class="form-note" role="status" hidden></p>
+        </form>
+        <div class="slice-head">
+          <label for="layer">水平密度切片</label><output id="depth" for="layer">—</output>
+        </div>
+        <figure class="density">
+          <canvas id="density" width="64" height="64" aria-label="当前深度的密度对比度热图"></canvas>
+        </figure>
+        <div class="slider">
+          <input id="layer" type="range" min="0" max="63" value="0" disabled>
+          <div><span>浅层</span><span>深层</span></div>
+        </div>
+        <div class="legend density-legend"><span id="density-min">—</span><canvas class="ramp" width="257" height="1" aria-hidden="true"></canvas><span id="density-max">—</span></div>
+        <div class="unit">密度对比度 · kg/m³</div>
+        <button id="run" class="primary" type="button" hidden disabled>
+          <span class="play" aria-hidden="true"></span>
+          <span id="run-label">运行正演</span>
+        </button>
+      </aside>
+      <section class="results" aria-labelledby="res-title">
+        <section class="volume" aria-labelledby="volume-title">
+          <div class="volume-header">
+            <div class="section-head"><h2 id="volume-title">三维密度模型</h2><span class="volume-unit">64³ 网格</span></div>
+            <div class="volume-tools" role="group" aria-label="三维视图设置">
+              <label class="volume-toggle"><input id="volume-slice" type="checkbox" disabled>切片位置</label>
+              <button id="volume-zoom-out" type="button" aria-label="缩小模型" title="缩小模型" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6"/></svg>
+              </button>
+              <button id="volume-zoom-in" type="button" aria-label="放大模型" title="放大模型" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M8 11h6m-3-3v6"/></svg>
+              </button>
+              <button id="volume-reset" type="button" aria-label="重置视角" title="重置视角" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="volume-stage">
+            <div id="volume-view" tabindex="0" role="region" aria-label="三维密度视图" aria-describedby="volume-help"></div>
+            <p id="volume-status" class="volume-status" role="status">正在加载三维样本</p>
+          </div>
+          <div class="volume-footer">
+            <div class="volume-key" role="group" aria-label="三维密度差色标">
+              <span>密度差 · kg/m³</span>
+              <div class="legend volume-legend">
+                <span id="volume-min">—</span>
+                <div class="volume-ramp">
+                  <canvas id="volume-colorbar" class="ramp" width="257" height="1" aria-hidden="true"></canvas>
+                  <span>0</span>
+                </div>
+                <span id="volume-max">—</span>
+              </div>
+            </div>
+            <span id="volume-help" class="sr-only">拖动旋转，滚轮缩放。也可用方向键旋转，用加号和减号缩放。</span>
+            <output id="volume-layer" for="layer" hidden></output>
+          </div>
+        </section>
+        <div class="result-header">
+          <div class="section-head"><h2 id="res-title">地表重力异常</h2></div>
+          <span id="state" class="state" role="status" aria-live="polite">正在加载样本</span>
+        </div>
+        <div class="results-meta"><span id="case-label">内置仿真样本</span><span id="domain-label">—</span></div>
+        <div id="alert" class="error-notice" role="alert" hidden></div>
+        <div class="plots">
+          <figure class="plot">
+            <figcaption><strong>解析参考值</strong><span>（棱柱体解析法）</span></figcaption>
+            <div class="plot-frame"><canvas id="truth" width="64" height="64" aria-label="解析参考值重力热图"></canvas><div class="placeholder" id="truth-placeholder">加载中</div></div>
+            <div class="axes"><span>Y ↑</span><span>X →</span></div>
+          </figure>
+          <figure class="plot">
+            <figcaption><strong>FNO 预测</strong><span id="prediction-mode">（预计算结果）</span></figcaption>
+            <div class="plot-frame"><canvas id="prediction" width="64" height="64" aria-label="FNO 预测重力热图"></canvas><div class="placeholder" id="pred-placeholder">加载中</div></div>
+            <div class="axes"><span>Y ↑</span><span>X →</span></div>
+          </figure>
+          <figure class="plot">
+            <figcaption><strong>残差分布</strong><span>（预测值 − 参考值）</span></figcaption>
+            <div class="plot-frame"><canvas id="error" width="64" height="64" aria-label="预测减参考值残差热图"></canvas><div class="placeholder" id="err-placeholder">加载中</div></div>
+            <div class="axes"><span>Y ↑</span><span>X →</span></div>
+          </figure>
+        </div>
+        <div class="scales">
+          <div><div class="scale-title">参考值与预测值共用色标 <span>mGal</span></div><div class="legend"><span id="field-min">—</span><canvas class="ramp" width="257" height="1" aria-hidden="true"></canvas><span id="field-max">—</span></div></div>
+          <div>
+            <div class="scale-title">残差色标 <span>mGal</span></div>
+            <div class="legend residual-legend">
+              <span id="error-min">—</span>
+              <div class="residual-ramp">
+                <canvas id="error-ramp" class="ramp" width="257" height="1" aria-hidden="true"></canvas>
+                <span id="error-zero">0</span>
+              </div>
+              <span id="error-max">—</span>
+            </div>
+          </div>
+        </div>
+        <div id="probe" class="probe">观测点 · —</div>
+        <div class="section-head metrics-head"><h2>单样本评估</h2></div>
+        <dl class="metrics">
+          <div><dt>相对均方根误差</dt><dd id="rrmse">—</dd><small>RRMSE</small></div>
+          <div><dt>均方根误差</dt><dd id="rmse">—</dd><small>RMSE · mGal</small></div>
+          <div><dt>皮尔逊相关系数</dt><dd id="corr">—</dd><small>Pearson r</small></div>
+          <div><dt id="latency-title">离线推理耗时</dt><dd id="latency">—</dd><small id="device">模型前向 · ms</small></div>
+        </dl>
+        <section id="diagnostics" class="diagnostics" aria-label="像素级对比" hidden>
+          <figure class="diagnostic">
+            <figcaption id="histogram-title">像素值直方图</figcaption>
+            <div class="chart-key">
+              <span><i class="hist-truth" aria-hidden="true"></i>解析参考值</span>
+              <span><i class="hist-prediction" aria-hidden="true"></i>FNO 预测</span>
+            </div>
+            <canvas id="histogram" role="img" aria-labelledby="histogram-title"></canvas>
+          </figure>
+          <figure class="diagnostic">
+            <figcaption id="scatter-title">逐像素散点图</figcaption>
+            <div class="chart-key">
+              <span><i class="scatter-point" aria-hidden="true"></i><span id="pixel-count">—</span></span>
+              <span><i class="scatter-line" aria-hidden="true"></i>1:1 参考线</span>
+            </div>
+            <canvas id="scatter" role="img" aria-labelledby="scatter-title"></canvas>
+          </figure>
+        </section>
+        <p class="method">网页读取预先计算的合成样本结果。耗时为离线 CPU 推理记录。</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
